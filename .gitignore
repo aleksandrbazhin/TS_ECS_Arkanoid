@@ -24,8 +24,8 @@ coverage
 
 # Dependency directory
 node_modules
-bower_components
 !node_modules/ecs.ts
+bower_components
 
 # Editors
 .idea
