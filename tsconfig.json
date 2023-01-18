@@ -1,11 +1,14 @@
 {
-    "compilerOptions": {
-      "outDir": "./dist",
-      "allowJs": false,
-      "target": "es6",
-      "module": "ESNext",
-      "moduleResolution": "node",
-      "resolveJsonModule": true
-    },
-    "include": ["./src/**/*", "./src/ecs"]
-  }
+  "compilerOptions": {
+    "outDir": "./dist",
+    "allowJs": false,
+    "target": "es6",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true
+  },
+  "include": [
+    "./src/**/*",
+    "./src"
+  ]
+}

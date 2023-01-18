@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CopyPlugin = require('copy-webpack-plugin');
+const { SourceMapDevToolPlugin } = require("webpack");
 
 
 module.exports = {
@@ -16,8 +17,7 @@ module.exports = {
       },
       {
         test: /\.js$/,
-        loader: "source-map-loader",
-        exclude: /node_modules/,
+        loader: "source-map-loader"
       },
     ],
   },
@@ -36,5 +36,8 @@ module.exports = {
     new CopyPlugin({
       patterns: [{ from: 'src/assets', to: 'assets' }],
     }),
+    new SourceMapDevToolPlugin({
+      filename: "[file].map"
+    })
   ]
 };

@@ -1,4 +1,4 @@
-import { Game } from './game/game';
+import Game from './game/game';
 
 const BGCOLOR = '#1d1f21';
 
