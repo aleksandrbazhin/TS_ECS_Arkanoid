@@ -2,7 +2,9 @@ import { Application, Assets, Sprite } from "pixi.js";
 import { World } from "../ecs/src";
 import DisplayComponent from "./components/display";
 import PositionComponent from "./components/position";
+import UserControlComponent from "./components/user-control";
 import VelocityComponent from "./components/velocity";
+import ControlSystem from "./systems/control";
 import MoveSystem from "./systems/move";
 import RenderSystem from "./systems/render";
 
@@ -30,6 +32,7 @@ export default class Game {
         this.world.registerComponent(DisplayComponent);
         this.world.registerComponent(PositionComponent);
         this.world.registerComponent(VelocityComponent);
+        this.world.registerComponent(UserControlComponent);
 
         const paddle = this.world.createEntity();
         this.world.addComponent(paddle, new DisplayComponent(Assets.get('paddle')));
@@ -37,6 +40,8 @@ export default class Game {
             this.app.screen.width * 0.5, 
             this.app.screen.height - 100,
         ));
+        this.world.addComponent(paddle, new UserControlComponent());
+
 
         const ball = this.world.createEntity();
         this.world.addComponent(ball, new DisplayComponent(Assets.get('ball')));
@@ -46,9 +51,12 @@ export default class Game {
         ));
         this.world.addComponent(ball, new VelocityComponent(0, 0.1));
 
+
         this.world.addSystem(new RenderSystem(this.world, this.app));
         this.world.addSystem(new MoveSystem(this.world));
+        this.world.addSystem(new ControlSystem(this.world, this.app));
         
+
         this.app.ticker.add((delta) => {
             this.world.update(delta);
         });
