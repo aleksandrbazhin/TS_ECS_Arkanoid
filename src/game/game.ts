@@ -61,8 +61,6 @@ export default class Game {
         });
     }
 
-
-
     private createBricks() {
         for (let i = 0; i < 10; i++) {
             const brick = this.createVisualEntity(100.0 + i * 180, 100.0, Const.BRICK_TEXTURE_KEY);
@@ -70,20 +68,17 @@ export default class Game {
         }
     }
 
-
     private createPaddle(x: number, y: number) {
         const paddle = this.createVisualEntity(x, y, Const.PADDLE_TEXTURE_KEY);
         this.world.addComponent(paddle, new UserControlComponent());
         this.world.addTag(paddle, Const.PLAYER_PADDLE_TAG);
     }
 
-
     private createBall(x: number, y: number) {
         const ball = this.createVisualEntity(x, y, Const.BALL_TEXTURE_KEY);
         this.world.addComponent(ball, new VelocityComponent(2.0, 5.0));
         this.world.addTag(ball, Const.BALL_TAG)
     }
-
 
     private createVisualEntity(x: number, y: number, asset_key: string): number {
         const entity = this.world.createEntity();
@@ -93,5 +88,4 @@ export default class Game {
         this.world.addComponent(entity, new ColliderSizeComponent(sprite.width, sprite.height));
         return entity;
     }
-
 }

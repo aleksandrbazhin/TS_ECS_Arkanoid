@@ -54,6 +54,7 @@ export default class CollisionSystem implements System {
             } else {
                 // ball to brick or potential ball to ball collisions
                 if (isBall && this.world.hasTag(otherEntity, Const.BRICK_TAG)) {
+                    // ball to brick collision
                     if (left < otherRight && right > otherLeft && top < otherBottom && bottom > otherTop) {
                         const isColliding: boolean = this.solveBallBrickCollision(movingEntity, movingPosition, movingSize, otherPosition, otherSize);
                         if (isColliding) {
@@ -108,14 +109,14 @@ export default class CollisionSystem implements System {
             hasCollision = true;
         } else if (distanceX <= (rectSize.width * 0.5)) {
             contactX = ballPosition.x;
-             // velocity is used since the ball can go far through the brick in one step
+            // velocity is used since the ball can go far through the brick in one step
             contactY = ballVelocity.y > 0 ? rectTop - r : rectBottom + r;
             hasCollision = true;
         } else {
             // test corner intersection
             const cornerDistanceSq: number = (distanceX - rectSize.width * 0.5) ^ 2.0 + (distanceY - rectSize.height * 0.5) ^ 2.0;
             if (cornerDistanceSq < r * r) {
-                // this is not a correct formula
+                // this is not a correct formula, it's just good enough
                 contactX = ballPosition.x < rectPosition.x ? rectLeft - r * Math.SQRT2 : rectRight + r * Math.SQRT2;
                 contactY = ballPosition.y < rectPosition.y ? rectTop - r * Math.SQRT2 : rectBottom + r * Math.SQRT2;
                 hasCollision = true;
@@ -123,11 +124,11 @@ export default class CollisionSystem implements System {
         }
         if (hasCollision) {
             const displaceX = contactX - ballPosition.x;
-            const displaceY = contactY - ballPosition.y ;
+            const displaceY = contactY - ballPosition.y;
             const displaceLength = Math.sqrt(displaceX * displaceX + displaceY * displaceY);
             const normalX = displaceX / displaceLength;
             const normalY = displaceY / displaceLength;
-            
+
             const dotProd = ballVelocity.x * normalX + ballVelocity.y * normalY
             ballVelocity.x -= 2.0 * normalX * dotProd;
             ballVelocity.y -= 2.0 * normalY * dotProd;
@@ -186,6 +187,4 @@ export default class CollisionSystem implements System {
             position.y + size.height * (1.0 - Const.SPRITE_ANCHOR)
         ];
     }
-
-
 }
