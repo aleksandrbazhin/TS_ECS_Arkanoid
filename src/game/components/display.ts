@@ -1,9 +1,8 @@
-import { Sprite, Texture } from "pixi.js";
+import { Sprite } from "pixi.js";
+import Const from "../const";
 
 export default class DisplayComponent {
-    public sprite: Sprite;
-    constructor(texture: Texture) {
-        this.sprite = Sprite.from(texture);
-        this.sprite.anchor.set(0.5);
+    constructor(public sprite: Sprite) {
+        this.sprite.anchor.set(Const.SPRITE_ANCHOR);
     }
   }

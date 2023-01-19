@@ -1,8 +1,7 @@
 import { Query, System, World } from "ecs";
-import { Application, FederatedMouseEvent, FederatedPointerEvent, Point } from "pixi.js";
+import { Application, FederatedPointerEvent, Point } from "pixi.js";
 import PositionComponent from "../components/position";
-import UserControlComponent from "../components/user-control";
-import VelocityComponent from "../components/velocity";
+import UserControlComponent from "../components/control";
 
 
 export default class ControlSystem implements System {
@@ -11,9 +10,10 @@ export default class ControlSystem implements System {
 
   constructor(public world: World, public app: Application) {
     this.query = world.createQuery([PositionComponent, UserControlComponent]);
+    this.eventPosition = new Point(this.app.screen.width * 0.5, 0);
     this.app.stage.hitArea = this.app.screen;
     this.app.stage.interactive = true;
-    this.eventPosition = new Point(this.app.screen.width * 0.5, 0);
+    this.app.renderer.events.cursorStyles.default = 'none';
     this.app.stage.onpointermove = this.onUserPointerInput.bind(this);
   }
 
