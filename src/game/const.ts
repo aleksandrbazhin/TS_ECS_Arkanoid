@@ -3,6 +3,7 @@ export default class Const {
     public static SPRITE_ANCHOR = 0.5;
     public static BALL_TAG = 'Ball';
     public static PLAYER_PADDLE_TAG = 'Player';
+    public static BRICK_TAG = 'Brick';
     public static BALL_TEXTURE_KEY = 'ball';
     public static PADDLE_TEXTURE_KEY = 'paddle';
     public static BRICK_TEXTURE_KEY = 'brick';

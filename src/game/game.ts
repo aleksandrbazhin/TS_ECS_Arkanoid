@@ -44,7 +44,7 @@ export default class Game {
         this.world.registerComponent(UserControlComponent);
         this.world.registerComponent(DestroyComponent);
 
-        this.world.registerTags([Const.PLAYER_PADDLE_TAG, Const.BALL_TAG])
+        this.world.registerTags([Const.PLAYER_PADDLE_TAG, Const.BALL_TAG, Const.BRICK_TAG])
 
         this.world.addSystem(new RenderSystem(this.world, this.app));
         this.world.addSystem(new MoveSystem(this.world));
@@ -52,6 +52,7 @@ export default class Game {
         this.world.addSystem(new CollisionSystem(this.world, this.app));
         this.world.addSystem(new DestroySystem(this.world, this.app));
 
+        this.createBricks();
         this.createPaddle(this.app.screen.width * 0.5, this.app.screen.height - 50);
         this.createBall(this.app.screen.width * 0.5, this.app.screen.height * 0.5);
 
@@ -61,10 +62,19 @@ export default class Game {
     }
 
 
+
+    private createBricks() {
+        for (let i = 0; i < 10; i++) {
+            const brick = this.createVisualEntity(100.0 + i * 180, 100.0, Const.BRICK_TEXTURE_KEY);
+            this.world.addTag(brick, Const.BRICK_TAG);
+        }
+    }
+
+
     private createPaddle(x: number, y: number) {
         const paddle = this.createVisualEntity(x, y, Const.PADDLE_TEXTURE_KEY);
         this.world.addComponent(paddle, new UserControlComponent());
-        this.world.addTag(paddle, Const.PLAYER_PADDLE_TAG)
+        this.world.addTag(paddle, Const.PLAYER_PADDLE_TAG);
     }
 
 

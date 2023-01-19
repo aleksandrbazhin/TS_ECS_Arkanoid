@@ -25,7 +25,7 @@ export default class CollisionSystem implements System {
         }
         for (const movingEntity of this.velocityQuery.entities) {
             this.resolveBoundaryCollisions(movingEntity);
-            this.resolveDynamicCollisions(movingEntity) 
+            this.resolveDynamicCollisions(movingEntity)
         }
     }
 
@@ -33,88 +33,110 @@ export default class CollisionSystem implements System {
         for (const otherEntity of this.allQuery.entities) {
             if (movingEntity == otherEntity) continue;
 
+            const isBall: boolean = this.world.hasTag(movingEntity, Const.BALL_TAG);
+
             const movingPosition = this.world.getComponent(movingEntity, PositionComponent);
             const movingSize = this.world.getComponent(movingEntity, ColliderSizeComponent);
-            const [left, right, top, bottom] = this.getAABB(movingPosition, movingSize); 
+            const [left, right, top, bottom] = this.getAABB(movingPosition, movingSize);
 
             const otherPosition = this.world.getComponent(otherEntity, PositionComponent);
             const otherSize = this.world.getComponent(otherEntity, ColliderSizeComponent);
-            const [otherLeft, otherRight, otherTop, otherBottom] = this.getAABB(otherPosition, otherSize); 
+            const [otherLeft, otherRight, otherTop, otherBottom] = this.getAABB(otherPosition, otherSize);
 
             if (this.world.hasTag(otherEntity, Const.PLAYER_PADDLE_TAG)) {
                 // moving entity (ball or bonus) to paddle collision
-                if (this.world.hasTag(movingEntity, Const.BALL_TAG)) {
+                if (isBall) {
                     // ball to paddle collision
                     if (left < otherRight && right > otherLeft && top < otherBottom && bottom > otherTop) {
                         this.solveBallPaddleCollision(movingEntity, movingPosition, movingSize, otherPosition, otherSize);
                     }
                 }
-            } else { 
+            } else {
                 // ball to brick or potential ball to ball collisions
+                if (isBall && this.world.hasTag(otherEntity, Const.BRICK_TAG)) {
+                    if (left < otherRight && right > otherLeft && top < otherBottom && bottom > otherTop) {
+                        const isColliding: boolean = this.solveBallBrickCollision(movingEntity, movingPosition, movingSize, otherPosition, otherSize);
+                        if (isColliding) {
+                            if (!this.world.hasComponent(otherEntity, DestroyComponent)) {
+                                this.world.addComponent(otherEntity, new DestroyComponent(otherPosition.x, otherPosition.y))
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
-    solveBallPaddleCollision(ball: number, ballPosition: PositionComponent, ballSize: ColliderSizeComponent, 
+    solveBallBrickCollision(ball: number, ballPosition: PositionComponent, ballSize: ColliderSizeComponent,
+        paddlePosition: PositionComponent, paddleSize: ColliderSizeComponent): boolean {
+        const velocity = this.world.getComponent(ball, VelocityComponent);
+        return this.solveBallRectangleCollision(ballPosition, ballSize, velocity, paddlePosition, paddleSize);
+    }
+
+    solveBallPaddleCollision(ball: number, ballPosition: PositionComponent, ballSize: ColliderSizeComponent,
         paddlePosition: PositionComponent, paddleSize: ColliderSizeComponent) {
         const velocity = this.world.getComponent(ball, VelocityComponent);
-        const yVel = velocity.y;
+        const yVel: number = velocity.y;
         this.solveBallRectangleCollision(ballPosition, ballSize, velocity, paddlePosition, paddleSize)
         if (yVel > 0 && yVel == -velocity.y) {
             // testing for collision from the top - to have different reflectons based on the contact position
             const rotateAngle = (ballPosition.x - paddlePosition.x) / paddleSize.width * Const.PADDLE_REFLECTION_ROTATE_FACTOR;
-            const cos = Math.cos(rotateAngle);
             const sin = Math.sin(rotateAngle);
-            velocity.x = cos * velocity.x - sin * velocity.y;
-            velocity.y = cos * velocity.y + sin * velocity.x;
+            const cos = Math.cos(rotateAngle);
+            const vx = velocity.x;
+            const vy = velocity.y;
+            velocity.x = cos * vx - sin * vy;
+            velocity.y = sin * vx + cos * vy;
         }
-
     }
 
-    solveBallRectangleCollision(ballPosition: PositionComponent, ballSize: ColliderSizeComponent, 
-        ballVelocity: VelocityComponent, rectPosition: PositionComponent, rectSize: ColliderSizeComponent) 
-    {
+    solveBallRectangleCollision(ballPosition: PositionComponent, ballSize: ColliderSizeComponent,
+        ballVelocity: VelocityComponent, rectPosition: PositionComponent, rectSize: ColliderSizeComponent): boolean {
         const r = ballSize.width * 0.5;
         const distanceX = Math.abs(ballPosition.x - rectPosition.x);
-        const distanceY = Math.abs(ballPosition.y - rectPosition.y); 
+        const distanceY = Math.abs(ballPosition.y - rectPosition.y);
 
         let contactX: number = 0.0;
         let contactY: number = 0.0;
         let hasCollision = false;
 
-        const [rectLeft, rectRight, rectTop, rectBottom] = this.getAABB(rectPosition, rectSize); 
+        const [rectLeft, rectRight, rectTop, rectBottom] = this.getAABB(rectPosition, rectSize);
 
-        if (distanceY <= (rectSize.height * 0.5)) { 
-            contactX = ballPosition.x < rectPosition.x ? rectLeft - r: rectRight + r;
+        if (distanceY <= (rectSize.height * 0.5)) {
+            contactX = ballPosition.x < rectPosition.x ? rectLeft - r : rectRight + r;
             contactY = ballPosition.y;
             hasCollision = true;
-        } else if (distanceX <= (rectSize.width * 0.5)) { 
+        } else if (distanceX <= (rectSize.width * 0.5)) {
             contactX = ballPosition.x;
-            contactY = ballVelocity.y > 0 ? rectTop - r: rectRight + r;
+             // velocity is used since the ball can go far through the brick in one step
+            contactY = ballVelocity.y > 0 ? rectTop - r : rectBottom + r;
             hasCollision = true;
         } else {
             // test corner intersection
-            const cornerDistance_sq = (distanceX - rectSize.width * 0.5) ^ 2.0 + (distanceY - rectSize.height * 0.5) ^ 2.0;
-            if (cornerDistance_sq < r * r) {
-                contactX = ballPosition.x < rectPosition.x ? rectLeft - r * Math.SQRT2: rectRight + r * Math.SQRT2;
-                contactY = ballPosition.y < rectPosition.y ? rectTop - r * Math.SQRT2: rectBottom + r * Math.SQRT2;
+            const cornerDistanceSq: number = (distanceX - rectSize.width * 0.5) ^ 2.0 + (distanceY - rectSize.height * 0.5) ^ 2.0;
+            if (cornerDistanceSq < r * r) {
+                // this is not a correct formula
+                contactX = ballPosition.x < rectPosition.x ? rectLeft - r * Math.SQRT2 : rectRight + r * Math.SQRT2;
+                contactY = ballPosition.y < rectPosition.y ? rectTop - r * Math.SQRT2 : rectBottom + r * Math.SQRT2;
                 hasCollision = true;
             }
         }
         if (hasCollision) {
-            const displaceX = ballPosition.x - contactX;
-            const displaceY = ballPosition.y - contactY ;
+            const displaceX = contactX - ballPosition.x;
+            const displaceY = contactY - ballPosition.y ;
             const displaceLength = Math.sqrt(displaceX * displaceX + displaceY * displaceY);
             const normalX = displaceX / displaceLength;
             const normalY = displaceY / displaceLength;
-
-            ballVelocity.x -= 2.0 * normalX * (ballVelocity.x*normalX + ballVelocity.y*normalY); 
-            ballVelocity.y -= 2.0 * normalY * (ballVelocity.x*normalX + ballVelocity.y*normalY); 
+            
+            const dotProd = ballVelocity.x * normalX + ballVelocity.y * normalY
+            ballVelocity.x -= 2.0 * normalX * dotProd;
+            ballVelocity.y -= 2.0 * normalY * dotProd;
 
             ballPosition.x = contactX;
             ballPosition.y = contactY;
-
+            return true;
         }
+        return false;
     }
 
 
@@ -124,7 +146,7 @@ export default class CollisionSystem implements System {
 
         let boundary_collision_x = false;
         let boundary_collision_y = false;
-        const [left, right, top, bottom] = this.getAABB(position, size); 
+        const [left, right, top, bottom] = this.getAABB(position, size);
         if (left < 0) {
             position.x = size.width * Const.SPRITE_ANCHOR;
             boundary_collision_x = true;
@@ -143,27 +165,27 @@ export default class CollisionSystem implements System {
                 this.world.addComponent(entity, new DestroyComponent(position.x, position.y))
             }
         }
-        
+
         if (this.world.hasComponent(entity, VelocityComponent)) {
             const velocity = this.world.getComponent(entity, VelocityComponent);
             if (boundary_collision_x) {
-                velocity.x = -velocity.x; 
+                velocity.x = -velocity.x;
             }
             if (boundary_collision_y) {
-                velocity.y = -velocity.y; 
+                velocity.y = -velocity.y;
             }
         }
     }
 
-    getAABB(position: PositionComponent, size: ColliderSizeComponent): 
-            [left: number, right: number, top: number, bottom: number] {
+    getAABB(position: PositionComponent, size: ColliderSizeComponent):
+        [left: number, right: number, top: number, bottom: number] {
         return [
-            position.x - size.width * Const.SPRITE_ANCHOR, 
+            position.x - size.width * Const.SPRITE_ANCHOR,
             position.x + size.width * (1.0 - Const.SPRITE_ANCHOR),
             position.y - size.height * Const.SPRITE_ANCHOR,
             position.y + size.height * (1.0 - Const.SPRITE_ANCHOR)
         ];
     }
 
-    
+
 }
