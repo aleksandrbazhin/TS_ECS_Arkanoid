@@ -6,7 +6,10 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true 
+    "allowSyntheticDefaultImports": true,
+    "paths" : {
+      "ecs": ["./src/ecs/src/"]
+    }
   },
   "include": [
     "./src/**/*",
